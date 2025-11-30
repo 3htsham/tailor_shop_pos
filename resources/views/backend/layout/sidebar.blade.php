@@ -542,6 +542,8 @@
 
                         $customer_group_permission_active = $role_has_permissions_list->where('name', 'customer_group')->first();
 
+                        $task_index_permission_active = $role_has_permissions_list->where('name', 'tasks-index')->first();
+
                         $brand_permission_active = $role_has_permissions_list->where('name', 'brand')->first();
 
                         $unit_permission_active = $role_has_permissions_list->where('name', 'unit')->first();
@@ -601,6 +603,9 @@
                     <li id="table-menu"><a href="{{route('tables.index')}}">{{trans('file.Tables')}}</a></li>
                     @if($customer_group_permission_active)
                     <li id="customer-group-menu"><a href="{{route('customer_group.index')}}">{{trans('file.Customer Group')}}</a></li>
+                    @endif
+                    @if($task_index_permission_active)
+                    <li id="tasks-menu"><a href="{{route('tasks.index')}}">Tasks</a></li>
                     @endif
                     @if($brand_permission_active)
                     <li id="brand-menu"><a href="{{route('brand.index')}}">{{trans('file.Brand')}}</a></li>

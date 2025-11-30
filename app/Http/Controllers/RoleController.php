@@ -1257,6 +1257,54 @@ class RoleController extends Controller
                 $role->revokePermissionTo('custom_field');
         }
 
+        if($request->has('tasks-index')) {
+            $permission = Permission::firstOrCreate(['name' => 'tasks-index']);
+            if(!$role->hasPermissionTo('tasks-index')) {
+                $role->givePermissionTo($permission);
+            }
+        }
+        else {
+            $permission = Permission::where('name', 'tasks-index')->first();
+            if($permission)
+                $role->revokePermissionTo('tasks-index');
+        }
+
+        if($request->has('tasks-add')) {
+            $permission = Permission::firstOrCreate(['name' => 'tasks-add']);
+            if(!$role->hasPermissionTo('tasks-add')) {
+                $role->givePermissionTo($permission);
+            }
+        }
+        else {
+            $permission = Permission::where('name', 'tasks-add')->first();
+            if($permission)
+                $role->revokePermissionTo('tasks-add');
+        }
+
+        if($request->has('tasks-edit')) {
+            $permission = Permission::firstOrCreate(['name' => 'tasks-edit']);
+            if(!$role->hasPermissionTo('tasks-edit')) {
+                $role->givePermissionTo($permission);
+            }
+        }
+        else {
+            $permission = Permission::where('name', 'tasks-edit')->first();
+            if($permission)
+                $role->revokePermissionTo('tasks-edit');
+        }
+
+        if($request->has('tasks-delete')) {
+            $permission = Permission::firstOrCreate(['name' => 'tasks-delete']);
+            if(!$role->hasPermissionTo('tasks-delete')) {
+                $role->givePermissionTo($permission);
+            }
+        }
+        else {
+            $permission = Permission::where('name', 'tasks-delete')->first();
+            if($permission)
+                $role->revokePermissionTo('tasks-delete');
+        }
+
         cache()->forget('permissions');
 
         return redirect('role')->with('message', 'Permission updated successfully');

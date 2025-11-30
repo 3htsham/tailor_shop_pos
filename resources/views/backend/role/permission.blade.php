@@ -861,6 +861,57 @@
 						            	</div>
 						            </td>
 						        </tr>
+                                <tr>
+						            <td>Task</td>
+						            <td class="text-center">
+						                <div class="icheckbox_square-blue" aria-checked="false" aria-disabled="false">
+							                <div class="checkbox">
+								                @if(in_array("tasks-index", $all_permission))
+								                <input type="checkbox" value="1" id="tasks-index" name="tasks-index" checked>
+								                @else
+								                <input type="checkbox" value="1" id="tasks-index" name="tasks-index">
+								                @endif
+								                <label for="tasks-index"></label>
+								            </div>
+						            	</div>
+						            </td>
+						            <td class="text-center">
+						                <div class="icheckbox_square-blue" aria-checked="false" aria-disabled="false">
+							                <div class="checkbox">
+								                @if(in_array("tasks-add", $all_permission))
+								                <input type="checkbox" value="1" id="tasks-add" name="tasks-add" checked>
+								                @else
+								                <input type="checkbox" value="1" id="tasks-add" name="tasks-add">
+								                @endif
+								                <label for="tasks-add"></label>
+								            </div>
+						            	</div>
+						            </td>
+						            <td class="text-center">
+						                <div class="icheckbox_square-blue" aria-checked="false" aria-disabled="false">
+							                <div class="checkbox">
+								                @if(in_array("tasks-edit", $all_permission))
+								                <input type="checkbox" value="1" id="tasks-edit" name="tasks-edit" checked>
+								                @else
+								                <input type="checkbox" value="1" id="tasks-edit" name="tasks-edit">
+								                @endif
+								                <label for="tasks-edit"></label>
+								            </div>
+						            	</div>
+						            </td>
+						            <td class="text-center">
+						                <div class="icheckbox_square-blue" aria-checked="false" aria-disabled="false">
+							                <div class="checkbox">
+								                @if(in_array("tasks-delete", $all_permission))
+								                <input type="checkbox" value="1" id="tasks-delete" name="tasks-delete" checked>
+								                @else
+								                <input type="checkbox" value="1" id="tasks-delete" name="tasks-delete">
+								                @endif
+								                <label for="tasks-delete"></label>
+								            </div>
+						            	</div>
+						            </td>
+						        </tr>
 						        <tr>
 						            <td>{{trans('file.dashboard')}}</td>
 						            <td class="report-permissions" colspan="5">

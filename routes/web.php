@@ -21,6 +21,7 @@ use App\Http\Controllers\CashRegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientAutoUpdateController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerGroupController;
@@ -709,6 +710,8 @@ Route::group(['middleware' => ['common', 'auth', 'active']], function() {
         });
     });
 
+
+    Route::resource('tasks', TaskController::class);
 
     Route::resource('currency', CurrencyController::class);
 
