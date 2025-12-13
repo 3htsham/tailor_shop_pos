@@ -410,6 +410,12 @@ class SaleController extends Controller
                         <button type="button" class="create-packing-slip-btn btn btn-link" data-id = "'.$sale->id.'" data-toggle="modal" data-target="#packing-slip-modal"><i class="dripicons-box"></i> '.trans('file.Create Packing Slip').'</button>
                     </li>';
                 }
+
+                $nestedData['options'] .= 
+                    '<li>
+                        <a href="'.route('sales.task.index', $sale->id).'" class="btn btn-link"><i class="dripicons-list"></i> '.trans('file.Task Management').'</a>
+                    </li>';
+
                 if(in_array("sale-payment-index", $request['all_permission']))
                     $nestedData['options'] .=
                         '<li>
@@ -471,6 +477,7 @@ class SaleController extends Controller
                 $data[] = $nestedData;
             }
         }
+
         $json_data = array(
             "draw"            => intval($request->input('draw')),
             "recordsTotal"    => intval($totalData),

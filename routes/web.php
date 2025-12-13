@@ -22,6 +22,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientAutoUpdateController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskAssignmentController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerGroupController;
@@ -716,6 +717,12 @@ Route::group(['middleware' => ['common', 'auth', 'active']], function() {
     Route::resource('currency', CurrencyController::class);
 
     Route::resource('custom-fields', CustomFieldController::class);
+
+
+    Route::controller(TaskAssignmentController::class)->group(function () {
+        Route::get('sales/task/{sale_id}', 'index')->name('sales.task.index');
+        Route::post('sales/task/store', 'store')->name('sales.task.store');
+    });
 
     Route::post('woocommerce-install', [AddonInstallController::class,'woocommerceInstall'])->name('woocommerce.install');
 
