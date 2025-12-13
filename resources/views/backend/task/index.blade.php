@@ -50,7 +50,7 @@
                                 <li><button type="button" data-id="{{$task_data->id}}" data-name="{{$task_data->task_name}}" data-price="{{$task_data->default_price}}" class="edit-btn btn btn-link" data-toggle="modal" data-target="#editModal"><i class="dripicons-document-edit"></i> {{trans('file.edit')}}</button></li>
                                 @endif
                                 <li class="divider"></li>
-                                @if($canDeleteTask)
+                                @if($canDeleteTask && $task_data->task_assignments_count == 0)
                                 {{ Form::open(['route' => ['tasks.destroy', $task_data->id], 'method' => 'DELETE'] ) }}
                                 <li>
                                     <button type="submit" class="btn btn-link" onclick="return confirm('Are you sure want to delete?')"><i class="dripicons-trash"></i> {{trans('file.delete')}}</button>

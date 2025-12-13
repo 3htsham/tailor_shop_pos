@@ -13,7 +13,7 @@ class TaskController extends Controller
     {
         $role = Role::find(Auth::user()->role_id);
         if($role->hasPermissionTo('tasks-index')) {
-            $task_all = Task::where('is_active', true)->get();
+            $task_all = Task::where('is_active', true)->withCount('taskAssignments')->get();
             $canAddTask = $role->hasPermissionTo('tasks-add');
             $canEditTask = $role->hasPermissionTo('tasks-edit');
             $canDeleteTask = $role->hasPermissionTo('tasks-delete');
