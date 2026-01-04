@@ -661,6 +661,7 @@ Route::group(['middleware' => ['common', 'auth', 'active']], function() {
     Route::resource('departments', DepartmentController::class);
 
 
+    Route::post('employees/balance/adjust', [EmployeeController::class, 'adjustBalance'])->name('employees.balance.adjust');
     Route::post('employees/deletebyselection', [EmployeeController::class, 'deleteBySelection']);
     Route::resource('employees', EmployeeController::class);
 

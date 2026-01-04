@@ -67,6 +67,9 @@
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
                             <ul class="dropdown-menu edit-options dropdown-menu-right dropdown-default" user="menu">
+                                <li>
+                                    <a href="{{route('employees.show', $employee->id)}}" class="btn btn-link"><i class="dripicons-user"></i> View Profile</a>
+                                </li>
                                 @if(in_array("employees-edit", $all_permission))
                                 <li>
                                     <button type="button" data-id="{{$employee->id}}" data-name="{{$employee->name}}" data-email="{{$employee->email}}" data-phone_number="{{$employee->phone_number}}" data-department_id="{{$employee->department_id}}" data-address="{{$employee->address}}" data-city="{{$employee->city}}" data-country="{{$employee->country}}" data-staff_id="{{$employee->staff_id}}" class="edit-btn btn btn-link" data-toggle="modal" data-target="#editModal"><i class="dripicons-document-edit"></i> {{trans('file.edit')}}</button>

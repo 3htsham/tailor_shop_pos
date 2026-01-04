@@ -208,4 +208,53 @@ class EmployeeController extends Controller
         $lims_employee_data->save();
         return redirect('employees')->with('not_permitted', 'Employee deleted successfully');
     }
+
+    public function show($id)
+    {
+        $employee = Employee::findOrFail($id);
+        
+        // Task History
+        $recent_tasks = \App\Models\TaskAssignment::where('employee_id', $id)
+                            ->with('task', 'sale')
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(10, ['*'], 'tasks_page');
+
+        // Payroll History
+        $payroll_history = \App\Models\Payroll::where('employee_id', $id)
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(10, ['*'], 'payroll_page');
+
+        return view('backend.employee.show', compact('employee', 'recent_tasks', 'payroll_history'));
+    }
+
+    public function adjustBalance(Request $request) 
+    {
+        $validated = $request->validate([
+             'employee_id' => 'required|exists:employees,id',
+             'target_balance' => 'required|numeric',
+             'note' => 'nullable|string'
+        ]);
+
+        $employee = Employee::findOrFail($validated['employee_id']);
+        $current_balance = $employee->balance;
+        $target_balance = $validated['target_balance'];
+        
+        $adjustment_amount = $target_balance - $current_balance;
+
+        if ($adjustment_amount != 0) {
+            \App\Models\EmployeeBalanceAdjustment::create([
+                'employee_id' => $employee->id,
+                'amount' => $adjustment_amount,
+                'note' => $validated['note'],
+                'user_id' => Auth::id()
+            ]);
+
+            $employee->balance = $target_balance;
+            $employee->save();
+
+            return redirect()->back()->with('message', 'Balance adjusted successfully');
+        }
+
+        return redirect()->back()->with('message', 'No adjustment needed (Target matches current)');
+    }
 }

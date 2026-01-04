@@ -54,6 +54,7 @@ class PayrollController extends Controller
         $message = 'Payroll creared succesfully';
         //collecting mail data
         $lims_employee_data = Employee::find($data['employee_id']);
+        $lims_employee_data->decrement('balance', $data['amount']);
         $mail_data['reference_no'] = $data['reference_no'];
         $mail_data['amount'] = $data['amount'];
         $mail_data['name'] = $lims_employee_data->name;
