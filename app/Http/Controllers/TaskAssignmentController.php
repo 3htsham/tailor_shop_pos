@@ -53,8 +53,13 @@ class TaskAssignmentController extends Controller
             } 
             // Case 2: Updating the SAME task
             else {
-                // Price Integrity: Price cannot change once assigned
-                $validated['price'] = $last_assignment->price;
+                // Price Integrity: 
+                // If previous status was Pending, price IS editable (so we take validated price).
+                // If previous status was In-Progress, price is LOCKED (so we override with DB price).
+                if ($last_assignment->status == 'In-Progress') {
+                    $validated['price'] = $last_assignment->price;
+                }
+                // If Pending, we use $validated['price'] (user input), so no override needed.
 
                 // Sequential Status Check: Cannot revert progress
                 if ($last_assignment->status == 'In-Progress' && $validated['status'] == 'Pending') {

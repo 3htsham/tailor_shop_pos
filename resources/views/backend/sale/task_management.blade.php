@@ -45,8 +45,10 @@
                                 <div class="form-group">
                                     <label><strong>Price *</strong></label>
                                     <input type="number" name="price" class="form-control" step="any" required id="price" 
-                                    @if($last_assignment && $last_assignment->task_id == $last_assignment->task->id)
+                                    @if($last_assignment && $last_assignment->task_id == $last_assignment->task->id && $last_assignment->status != 'Pending')
                                         value="{{$last_assignment->price}}" readonly
+                                    @elseif($last_assignment && $last_assignment->task_id == $last_assignment->task->id && $last_assignment->status == 'Pending')
+                                        value="{{$last_assignment->price}}"
                                     @endif
                                     >
                                 </div>
@@ -133,29 +135,41 @@
 @push('scripts')
 <script type="text/javascript">
     $(document).ready(function() {
-        // Initial price data from PHP if available (handled in blade value attribute)
-        // If not disabled (meaning new assignment), populate price based on selection
-        
         var $taskSelect = $('#task_id');
         var $priceInput = $('#price');
         var $statusSelect = $('#status');
-        var changingSameTask = {!! json_encode($last_assignment && $last_assignment->status != 'Completed') !!};
-        var currentPrice = {!! json_encode($last_assignment ? $last_assignment->price : null) !!};
         
-        // On load, if not restricted, ensure price matches selection
-        if (!$priceInput.prop('readonly')) {
+        var lastAssignment = @json($last_assignment);
+
+        // Function to handle price state
+        function updatePriceState() {
              var selectedOption = $taskSelect.find('option:selected');
-             if (selectedOption.val()) {
-                 $priceInput.val(selectedOption.data('price'));
+             var selectedTaskId = $taskSelect.val();
+             var defaultPrice = selectedOption.data('price');
+
+             // Reset to default state first (Editable)
+             $priceInput.prop('readonly', false);
+
+             if (lastAssignment && selectedTaskId == lastAssignment.task_id) {
+                 // If re-selecting the same task as last assignment
+                 $priceInput.val(lastAssignment.price);
+                 
+                 // If status is In-Progress or Completed, LOCK price.
+                 // If Pending, leave Editable.
+                 if (lastAssignment.status !== 'Pending') {
+                     $priceInput.prop('readonly', true);
+                 }
+             } else {
+                 // Different task selected, use default price and keep editable
+                 if (defaultPrice !== undefined && defaultPrice !== null) {
+                     $priceInput.val(defaultPrice);
+                 } else {
+                    $priceInput.val('');
+                 }
              }
         }
 
-        $taskSelect.on('change', function() {
-            var selectedOption = $(this).find('option:selected');
-            var price = selectedOption.data('price');
-            $priceInput.val(price);
-        });
-
+        $taskSelect.on('change', updatePriceState);
     });
 </script>
 @endpush
