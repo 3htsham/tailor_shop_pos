@@ -75,7 +75,10 @@ class TaskAssignmentController extends Controller
         TaskAssignment::create($validated);
 
         if($validated['status'] == 'Completed') {
-            Employee::where('id', $validated['employee_id'])->increment('balance', $validated['price']);
+            $employee = Employee::find($validated['employee_id']);
+            if (!$employee->is_payroll) {
+                $employee->increment('balance', $validated['price']);
+            }
         }
 
         return redirect()->back()->with('message', 'Task assigned successfully');

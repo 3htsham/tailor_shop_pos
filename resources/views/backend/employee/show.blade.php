@@ -42,6 +42,16 @@
                                 <td>{{$employee->department_id}}</td> {{-- Ideally show department name --}}
                             </tr>
                             <tr>
+                                <td>Payroll Employee</td>
+                                <td>@if($employee->is_payroll) <span class="badge badge-success">Yes</span> @else <span class="badge badge-secondary">No</span> @endif</td>
+                            </tr>
+                            @if($employee->is_payroll)
+                            <tr>
+                                <td>Monthly Salary</td>
+                                <td>{{number_format($employee->monthly_salary, 2)}}</td>
+                            </tr>
+                            @endif
+                            <tr>
                                 <td>Address</td>
                                 <td>{{$employee->address}}</td>
                             </tr>
@@ -80,7 +90,9 @@
                                                 <th>Date</th>
                                                 <th>Sale Ref</th>
                                                 <th>Task</th>
+                                                @if(!$employee->is_payroll)
                                                 <th>Price</th>
+                                                @endif
                                                 <th>Status</th>
                                             </tr>
                                         </thead>
@@ -90,7 +102,9 @@
                                                 <td>{{$task->created_at->format('Y-m-d')}}</td>
                                                 <td>{{$task->sale->reference_no}}</td>
                                                 <td>{{$task->task->task_name}}</td>
+                                                @if(!$employee->is_payroll)
                                                 <td>{{number_format($task->price, 2)}}</td>
+                                                @endif
                                                 <td>
                                                     @if($task->status == 'Completed') <span class="badge badge-success">{{$task->status}}</span>
                                                     @elseif($task->status == 'In-Progress') <span class="badge badge-primary">{{$task->status}}</span>

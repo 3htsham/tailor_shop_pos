@@ -58,9 +58,16 @@
                                     <label>{{trans('file.Country')}}</label>
                                     <input type="text" name="country" class="form-control">
                                 </div>
-                                <div class="form-group">
                                     <label>{{trans('file.Staff Id')}}</label>
                                     <input type="text" name="staff_id" class="form-control">
+                                </div>
+                                <div class="form-group mt-3">
+                                    <input type="checkbox" name="is_payroll" value="1" class="is-payroll-checkbox">
+                                    <label><strong>{{trans('file.Payroll Employee')}}</strong></label>
+                                </div>
+                                <div class="form-group salary-section" style="display: none;">
+                                    <label>{{trans('file.Monthly Salary')}}</label>
+                                    <input type="number" name="monthly_salary" class="form-control" step="any">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -152,6 +159,16 @@
 
     $('#warehouse').hide();
     $('#biller').hide();
+
+    $('.is-payroll-checkbox').on('change', function() {
+        if($(this).is(':checked')) {
+            $('.salary-section').show(300);
+            $('input[name="monthly_salary"]').prop('required', true);
+        } else {
+            $('.salary-section').hide(300);
+            $('input[name="monthly_salary"]').prop('required', false);
+        }
+    });
 
     $('input[name="user"]').on('change', function() {
         if ($(this).is(':checked')) {

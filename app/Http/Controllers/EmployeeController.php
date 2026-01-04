@@ -91,6 +91,7 @@ class EmployeeController extends Controller
                 }),
             ],
             'image' => 'image|mimes:jpg,jpeg,png,gif|max:100000',
+            'monthly_salary' => 'nullable|numeric',
         ]);
 
         $image = $request->image;
@@ -109,6 +110,9 @@ class EmployeeController extends Controller
         }
         $data['name'] = $data['employee_name'];
         $data['is_active'] = true;
+        $data['is_payroll'] = $request->has('is_payroll') ? true : false;
+        $data['monthly_salary'] = $data['is_payroll'] ? $data['monthly_salary'] : null;
+        
         Employee::create($data);
 
         return redirect('employees')->with('message', $message);
@@ -162,6 +166,10 @@ class EmployeeController extends Controller
             }
             $data['image'] = $imageName;
         }
+        
+        $data['is_payroll'] = $request->has('is_payroll') ? true : false;
+        $data['monthly_salary'] = $data['is_payroll'] ? $data['monthly_salary'] : null;
+
         $lims_employee_data->update($data);
         return redirect('employees')->with('message', 'Employee updated successfully');
     }
