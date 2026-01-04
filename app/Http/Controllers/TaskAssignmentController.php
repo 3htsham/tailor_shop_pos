@@ -33,11 +33,43 @@ class TaskAssignmentController extends Controller
             'task_id' => 'required|exists:tasks,id',
             'employee_id' => 'required|exists:employees,id',
             'status' => 'required|in:Pending,In-Progress,Completed',
-            'status_date' => 'nullable|date',
+            'price' => 'required|numeric',
         ]);
 
-        if (empty($validated['status_date'])) {
-            $validated['status_date'] = now();
+        // Check for previous assignment logic
+        $last_assignment = TaskAssignment::where('sale_id', $validated['sale_id'])
+                                        ->orderBy('created_at', 'desc')
+                                        ->first();
+
+        if ($last_assignment) {
+            // Case 1: Switching to a DIFFERENT task
+            if ($last_assignment->task_id != $validated['task_id']) {
+                // Determine the logical previous task (latest one that isn't the one we are trying to start, essentially the same check)
+                // Actually the requirement is: if there is ANY task in Pending/In-Progress, we validiation restricted changing it via frontend.
+                // Backend check: 'Previous task must be completed'.
+                if ($last_assignment->status != 'Completed') {
+                     return redirect()->back()->with('not_permitted', 'Previous task must be completed before starting a new one.');
+                }
+            } 
+            // Case 2: Updating the SAME task
+            else {
+                // Price Integrity: Price cannot change once assigned
+                $validated['price'] = $last_assignment->price;
+
+                // Sequential Status Check: Cannot revert progress
+                if ($last_assignment->status == 'In-Progress' && $validated['status'] == 'Pending') {
+                    return redirect()->back()->with('not_permitted', 'Cannot revert status from In-Progress to Pending.');
+                }
+                if ($last_assignment->status == 'Completed') {
+                     // Generally shouldn't happen if UI handles it, but good to block reverting from Completed too if strict sequential.
+                     // Requirement said "In-Progress Task should not be Reverted back to Pending".
+                     // Implied: Completed shouldn't go back to Pending/In-Progress either?
+                     // Let's assume strict forward progress.
+                     if ($validated['status'] != 'Completed') {
+                        return redirect()->back()->with('not_permitted', 'Cannot revert status from Completed.');
+                     }
+                }
+            }
         }
 
         TaskAssignment::create($validated);

@@ -2151,6 +2151,15 @@ class SaleController extends Controller
         $document = $request->document;
         $lims_sale_data = Sale::find($id);
 
+        if(isset($data['sale_status']) && $data['sale_status'] == 1) {
+            $latest_task = \App\Models\TaskAssignment::where('sale_id', $id)
+                                ->orderBy('created_at', 'desc')
+                                ->first();
+            if($latest_task && in_array($latest_task->status, ['Pending', 'In-Progress'])) {
+                return redirect()->back()->with('not_permitted', 'Cannot complete sale with pending or in-progress tasks.');
+            }
+        }
+
         if ($document) {
             $v = Validator::make(
                 [

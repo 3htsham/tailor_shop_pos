@@ -10,7 +10,7 @@ class TaskAssignment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sale_id', 'task_id', 'employee_id', 'status', 'status_date'
+        'sale_id', 'task_id', 'employee_id', 'status', 'price'
     ];
 
     public function sale()

@@ -10,6 +10,9 @@
                 @if(session()->has('message'))
                     <div class="alert alert-success alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('message') }}</div>
                 @endif
+                @if(session()->has('not_permitted'))
+                    <div class="alert alert-danger alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('not_permitted') }}</div>
+                @endif
                 
                 <div class="row">
                     <div class="col-md-5">
@@ -23,14 +26,29 @@
                                 
                                 <div class="form-group">
                                     <label><strong>Task *</strong></label>
-                                    <select name="task_id" class="form-control selectpicker" required data-live-search="true">
+                                    @php
+                                        $task_disabled = $last_assignment && $last_assignment->status != 'Completed';
+                                    @endphp
+                                    @if($task_disabled)
+                                        <input type="hidden" name="task_id" value="{{$last_assignment->task_id}}">
+                                    @endif
+                                    <select name="task_id" class="form-control selectpicker" required data-live-search="true" @if($task_disabled) disabled @endif id="task_id">
                                         <option value="">Select Task</option>
                                         @foreach($tasks as $task)
-                                            <option value="{{$task->id}}" 
+                                            <option value="{{$task->id}}" data-price="{{$task->default_price}}"
                                                 @if($last_assignment && $last_assignment->task_id == $task->id) selected @endif
                                             >{{$task->task_name}}</option>
                                         @endforeach
                                     </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label><strong>Price *</strong></label>
+                                    <input type="number" name="price" class="form-control" step="any" required id="price" 
+                                    @if($last_assignment && $last_assignment->task_id == $last_assignment->task->id)
+                                        value="{{$last_assignment->price}}" readonly
+                                    @endif
+                                    >
                                 </div>
 
                                 <div class="form-group">
@@ -47,16 +65,14 @@
 
                                 <div class="form-group">
                                     <label><strong>Status *</strong></label>
-                                    <select name="status" class="form-control" required>
-                                        <option value="Pending" @if($last_assignment && $last_assignment->status == 'Pending') selected @endif>Pending</option>
+                                    <select name="status" class="form-control" required id="status">
+                                        <option value="Pending" 
+                                            @if($last_assignment && $last_assignment->status == 'Pending') selected @endif
+                                            @if($last_assignment && $last_assignment->status == 'In-Progress') disabled @endif
+                                        >Pending</option>
                                         <option value="In-Progress" @if($last_assignment && $last_assignment->status == 'In-Progress') selected @endif>In-Progress</option>
                                         <option value="Completed" @if($last_assignment && $last_assignment->status == 'Completed') selected @endif>Completed</option>
                                     </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label><strong>Status Date</strong></label>
-                                    <input type="date" name="status_date" class="form-control" value="{{ date('Y-m-d') }}">
                                 </div>
 
                                 <div class="form-group">
@@ -78,9 +94,9 @@
                                         <thead>
                                             <tr>
                                                 <th>Task</th>
+                                                <th>Price</th>
                                                 <th>Employee</th>
                                                 <th>Status</th>
-                                                <th>Status Date</th>
                                                 <th>Assigned At</th>
                                             </tr>
                                         </thead>
@@ -88,6 +104,7 @@
                                             @foreach($previous_assignments as $assignment)
                                             <tr>
                                                 <td>{{$assignment->task->task_name}}</td>
+                                                <td>{{number_format($assignment->price, 2)}}</td>
                                                 <td>{{$assignment->employee->name}}</td>
                                                 <td>
                                                     @if($assignment->status == 'Completed')
@@ -98,7 +115,6 @@
                                                         <div class="badge badge-warning">{{$assignment->status}}</div>
                                                     @endif
                                                 </td>
-                                                <td>{{$assignment->status_date}}</td>
                                                 <td>{{$assignment->created_at->format('Y-m-d H:i')}}</td>
                                             </tr>
                                             @endforeach
@@ -113,4 +129,34 @@
         </div>
     </div>
 </section>
+
+@push('scripts')
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Initial price data from PHP if available (handled in blade value attribute)
+        // If not disabled (meaning new assignment), populate price based on selection
+        
+        var $taskSelect = $('#task_id');
+        var $priceInput = $('#price');
+        var $statusSelect = $('#status');
+        var changingSameTask = {!! json_encode($last_assignment && $last_assignment->status != 'Completed') !!};
+        var currentPrice = {!! json_encode($last_assignment ? $last_assignment->price : null) !!};
+        
+        // On load, if not restricted, ensure price matches selection
+        if (!$priceInput.prop('readonly')) {
+             var selectedOption = $taskSelect.find('option:selected');
+             if (selectedOption.val()) {
+                 $priceInput.val(selectedOption.data('price'));
+             }
+        }
+
+        $taskSelect.on('change', function() {
+            var selectedOption = $(this).find('option:selected');
+            var price = selectedOption.data('price');
+            $priceInput.val(price);
+        });
+
+    });
+</script>
+@endpush
 @endsection
