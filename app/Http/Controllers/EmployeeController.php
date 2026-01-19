@@ -13,6 +13,8 @@ use Auth;
 use Illuminate\Validation\Rule;
 use App\Traits\TenantInfo;
 use Illuminate\Support\Facades\File;
+use App\Models\Account;
+use App\Models\EmployeePayment;
 
 class EmployeeController extends Controller
 {
@@ -227,11 +229,24 @@ class EmployeeController extends Controller
                             ->orderBy('created_at', 'desc')
                             ->paginate(10, ['*'], 'tasks_page');
 
-        // Payroll History
-        $payroll_history = \App\Models\Payroll::where('employee_id', $id)
-                            ->orderBy('created_at', 'desc')
-                            ->paginate(10, ['*'], 'payroll_page');
+        // Payroll History (Legacy)
+        $legacy_payroll = \App\Models\Payroll::where('employee_id', $id)->get();
+        // Employee Payments (New)
+        $employee_payments = \App\Models\EmployeePayment::where('employee_id', $id)->get();
 
+        // Merge and Sort
+        $payroll_history = $legacy_payroll->concat($employee_payments)->sortByDesc('created_at');
+
+        // Paginate manually
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('payroll_page');
+        $perPage = 10;
+        $payroll_history = new \Illuminate\Pagination\LengthAwarePaginator(
+            $payroll_history->forPage($page, $perPage),
+            $payroll_history->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'pageName' => 'payroll_page']
+        );
         return view('backend.employee.show', compact('employee', 'recent_tasks', 'payroll_history'));
     }
 
@@ -264,5 +279,35 @@ class EmployeeController extends Controller
         }
 
         return redirect()->back()->with('message', 'No adjustment needed (Target matches current)');
+    }
+
+    public function payEmployee(Request $request) 
+    {
+        $validated = $request->validate([
+             'employee_id' => 'required|exists:employees,id',
+             'amount' => 'required|numeric|min:0.01',
+             'paying_method' => 'required|string',
+             'note' => 'nullable|string'
+        ]);
+
+        $employee = Employee::findOrFail($validated['employee_id']);
+        
+        $payment_data = [
+            'reference_no' => 'emp-pay-' . date("Ymd") . '-'. date("his"),
+            'employee_id' => $employee->id,
+            'user_id' => Auth::id(),
+            'amount' => $validated['amount'],
+            'paying_method' => $validated['paying_method'],
+            'note' => $validated['note'],
+            'created_at' => date("Y-m-d H:i:s")
+        ];
+
+        \App\Models\EmployeePayment::create($payment_data);
+
+        // Deduct from balance
+        $employee->balance -= $validated['amount'];
+        $employee->save();
+
+        return redirect()->back()->with('message', 'Payment recorded successfully');
     }
 }
