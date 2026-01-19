@@ -14,6 +14,7 @@ use Illuminate\Validation\Rule;
 use App\Traits\TenantInfo;
 use Illuminate\Support\Facades\File;
 use App\Models\Account;
+use App\Models\TaskAssignment;
 use App\Models\EmployeePayment;
 
 class EmployeeController extends Controller
@@ -224,30 +225,14 @@ class EmployeeController extends Controller
         $employee = Employee::findOrFail($id);
         
         // Task History
-        $recent_tasks = \App\Models\TaskAssignment::where('employee_id', $id)
+        $recent_tasks = TaskAssignment::where('employee_id', $id)
                             ->with('task', 'sale')
                             ->orderBy('created_at', 'desc')
                             ->paginate(10, ['*'], 'tasks_page');
 
-        // Payroll History (Legacy)
-        $legacy_payroll = \App\Models\Payroll::where('employee_id', $id)->get();
-        // Employee Payments (New)
-        $employee_payments = \App\Models\EmployeePayment::where('employee_id', $id)->get();
+        $employee_payments = EmployeePayment::where('employee_id', $id)->paginate(10);
 
-        // Merge and Sort
-        $payroll_history = $legacy_payroll->concat($employee_payments)->sortByDesc('created_at');
-
-        // Paginate manually
-        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('payroll_page');
-        $perPage = 10;
-        $payroll_history = new \Illuminate\Pagination\LengthAwarePaginator(
-            $payroll_history->forPage($page, $perPage),
-            $payroll_history->count(),
-            $perPage,
-            $page,
-            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'pageName' => 'payroll_page']
-        );
-        return view('backend.employee.show', compact('employee', 'recent_tasks', 'payroll_history'));
+        return view('backend.employee.show', compact('employee', 'recent_tasks', 'employee_payments'));
     }
 
     public function adjustBalance(Request $request) 

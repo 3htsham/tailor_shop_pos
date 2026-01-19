@@ -156,7 +156,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse($payroll_history as $payroll)
+                                                @forelse($employee_payments as $payroll)
                                                     <tr>
                                                         <td>{{ $payroll->created_at->format('Y-m-d') }}</td>
                                                         <td>{{ $payroll->reference_no }}</td>
@@ -183,11 +183,7 @@
                                                 @endforelse
                                             </tbody>
                                         </table>
-                                        {{ $payroll_history->links() }}
-                                        <div class="text-right mt-3">
-                                            <a href="{{ route('payroll.index') }}" class="btn btn-link">View All Payroll
-                                                Records</a>
-                                        </div>
+                                        {{ $employee_payments->links() }}
                                     </div>
                                 </div>
                             </div>
@@ -233,7 +229,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Pay Employee Modal -->
     <div id="payEmployeeModal" tabindex="-1" role="dialog" aria-labelledby="payEmployeeModalLabel" aria-hidden="true"
         class="modal fade text-left">
