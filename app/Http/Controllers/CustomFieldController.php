@@ -136,10 +136,18 @@ class CustomFieldController extends Controller
         else
             $data_type = 'varchar(255)';
 
-        if($data['name'] == $lims_custom_field_data->name)
-            $action = " MODIFY ";
-        else
-            $action = " RENAME ";
+        if($data['name'] == $lims_custom_field_data->name) {}
+            $action = " MODIFY COLUMN ";
+            $column_definition = "`" . $column_name . "` " . $data_type; 
+        } else {
+            $action = " CHANGE COLUMN ";
+            $old_column_name = str.replace(" ", "_", strtolower($lims_custom_field_data->name)); 
+            $column_definition = "`" . $old_column_name . "` `" . $column_name . "` " . $data_type; 
+        }
+        // if($data['name'] == $lims_custom_field_data->name)
+        //     $action = " MODIFY ";
+        // else
+        //     $action = " RENAME ";
         //deleting previous custom column if necessary
         if($data['belongs_to'] != $lims_custom_field_data->belongs_to) {
             if($lims_custom_field_data->belongs_to == 'sale')
@@ -162,7 +170,8 @@ class CustomFieldController extends Controller
             $action = " ADD ";
         }
         //adding column to specific database
-        $sqlStatement = "ALTER TABLE ". $table_name . $action . "`" . $column_name . "` " . $data_type;
+        $sqlStatement = "ALTER TABLE ". $table_name . $action . $column_definition;
+        // $sqlStatement = "ALTER TABLE ". $table_name . $action . "`" . $column_name . "` " . $data_type;
         if($data['default_value_1']) {
             $sqlStatement .= " DEFAULT '" . $data['default_value_1'] . "'";
             $data['default_value'] = $data['default_value_1'];
