@@ -113,8 +113,8 @@
                                                 @forelse($recent_tasks as $task)
                                                     <tr>
                                                         <td>{{ $task->created_at->format('Y-m-d') }}</td>
-                                                        <td>{{ $task->sale->reference_no }}</td>
-                                                        <td>{{ $task->task->task_name }}</td>
+                                                        <td>{{ $employee->task?->reference_no ?? '--' }}</td>
+                                                        <td>{{ $task->task?->task_name ?? 'Unknown Task' }}</td>
                                                         @if (!$employee->is_payroll)
                                                             <td>{{ number_format($task->price, 2) }}</td>
                                                         @endif
