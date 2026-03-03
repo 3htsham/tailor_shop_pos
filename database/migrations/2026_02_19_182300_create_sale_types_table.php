@@ -9,6 +9,7 @@ class CreateSaleTypesTable extends Migration
     public function up()
     {
         Schema::create('sale_types', function (Blueprint $table) {
+            $table->engine = 'InnoDB'; // Ye line engine fix kar degi
             $table->id();
             $table->string('name');
             $table->string('measurement_unit'); // cm or inches
