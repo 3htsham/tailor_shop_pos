@@ -1203,4 +1203,5 @@ return [
 	"Update Income" => "Update Income",
 	"Only use for Select, Multi Select, Checkbox, Radio Button types. Populate the field by separating the options by coma. eq. apple,orange,banana" => "Only use for Select, Multi Select, Checkbox, Radio Button types. Populate the field by separating the options by coma. eq. apple,orange,banana",
 	"Exclusive: Poduct price = Actual product price + Tax. Inclusive: Actual product price = Product price - Tax" => "Exclusive: Poduct price = Actual product price + Tax. Inclusive: Actual product price = Product price - Tax",
+    "Task Management" => "Task Management",
 ];

@@ -13,6 +13,9 @@ use Auth;
 use Illuminate\Validation\Rule;
 use App\Traits\TenantInfo;
 use Illuminate\Support\Facades\File;
+use App\Models\Account;
+use App\Models\TaskAssignment;
+use App\Models\EmployeePayment;
 
 class EmployeeController extends Controller
 {
@@ -91,6 +94,7 @@ class EmployeeController extends Controller
                 }),
             ],
             'image' => 'image|mimes:jpg,jpeg,png,gif|max:100000',
+            'monthly_salary' => 'nullable|numeric',
         ]);
 
         $image = $request->image;
@@ -109,6 +113,9 @@ class EmployeeController extends Controller
         }
         $data['name'] = $data['employee_name'];
         $data['is_active'] = true;
+        $data['is_payroll'] = $request->has('is_payroll') ? true : false;
+        $data['monthly_salary'] = $data['is_payroll'] ? $data['monthly_salary'] : null;
+        
         Employee::create($data);
 
         return redirect('employees')->with('message', $message);
@@ -162,6 +169,10 @@ class EmployeeController extends Controller
             }
             $data['image'] = $imageName;
         }
+        
+        $data['is_payroll'] = $request->has('is_payroll') ? true : false;
+        $data['monthly_salary'] = $data['is_payroll'] ? $data['monthly_salary'] : null;
+
         $lims_employee_data->update($data);
         return redirect('employees')->with('message', 'Employee updated successfully');
     }
@@ -207,5 +218,81 @@ class EmployeeController extends Controller
         $lims_employee_data->is_active = false;
         $lims_employee_data->save();
         return redirect('employees')->with('not_permitted', 'Employee deleted successfully');
+    }
+
+    public function show($id)
+    {
+        $employee = Employee::findOrFail($id);
+        
+        // Task History
+        $recent_tasks = TaskAssignment::where('employee_id', $id)
+                            ->with('task', 'sale')
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(10, ['*'], 'tasks_page');
+
+        $employee_payments = EmployeePayment::where('employee_id', $id)->paginate(10);
+
+        return view('backend.employee.show', compact('employee', 'recent_tasks', 'employee_payments'));
+    }
+
+    public function adjustBalance(Request $request) 
+    {
+        $validated = $request->validate([
+             'employee_id' => 'required|exists:employees,id',
+             'target_balance' => 'required|numeric',
+             'note' => 'nullable|string'
+        ]);
+
+        $employee = Employee::findOrFail($validated['employee_id']);
+        $current_balance = $employee->balance;
+        $target_balance = $validated['target_balance'];
+        
+        $adjustment_amount = $target_balance - $current_balance;
+
+        if ($adjustment_amount != 0) {
+            \App\Models\EmployeeBalanceAdjustment::create([
+                'employee_id' => $employee->id,
+                'amount' => $adjustment_amount,
+                'note' => $validated['note'],
+                'user_id' => Auth::id()
+            ]);
+
+            $employee->balance = $target_balance;
+            $employee->save();
+
+            return redirect()->back()->with('message', 'Balance adjusted successfully');
+        }
+
+        return redirect()->back()->with('message', 'No adjustment needed (Target matches current)');
+    }
+
+    public function payEmployee(Request $request) 
+    {
+        $validated = $request->validate([
+             'employee_id' => 'required|exists:employees,id',
+             'amount' => 'required|numeric|min:0.01',
+             'paying_method' => 'required|string',
+             'note' => 'nullable|string'
+        ]);
+
+        $employee = Employee::findOrFail($validated['employee_id']);
+        
+        $payment_data = [
+            'reference_no' => 'emp-pay-' . date("Ymd") . '-'. date("his"),
+            'employee_id' => $employee->id,
+            'user_id' => Auth::id(),
+            'amount' => $validated['amount'],
+            'paying_method' => $validated['paying_method'],
+            'note' => $validated['note'],
+            'created_at' => date("Y-m-d H:i:s")
+        ];
+
+        \App\Models\EmployeePayment::create($payment_data);
+
+        // Deduct from balance
+        $employee->balance -= $validated['amount'];
+        $employee->save();
+
+        return redirect()->back()->with('message', 'Payment recorded successfully');
     }
 }

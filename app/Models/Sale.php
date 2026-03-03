@@ -6,9 +6,63 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
 {
-    protected $fillable =[
-        "reference_no", "user_id", "cash_register_id", "table_id", "queue", "customer_id", "warehouse_id", "biller_id", "item", "total_qty", "total_discount", "total_tax", "total_price", "order_tax_rate", "order_tax", "order_discount_type", "order_discount_value", "order_discount", "coupon_id", "coupon_discount", "shipping_cost", "grand_total", "currency_id", "exchange_rate", "sale_status", "payment_status", "billing_name", "billing_phone", "billing_email", "billing_address", "billing_city", "billing_state", "billing_country", "billing_zip", "shipping_name", "shipping_phone", "shipping_email", "shipping_address", "shipping_city", "shipping_state","shipping_country","shipping_zip", "sale_type", "paid_amount", "document", "sale_note", "staff_note", "created_at", "woocommerce_order_id"
+    protected $fillable = [
+        "reference_no",
+        "user_id",
+        "cash_register_id",
+        "table_id",
+        "queue",
+        "customer_id",
+        "warehouse_id",
+        "biller_id",
+        "item",
+        "total_qty",
+        "total_discount",
+        "total_tax",
+        "total_price",
+        "order_tax_rate",
+        "order_tax",
+        "order_discount_type",
+        "order_discount_value",
+        "order_discount",
+        "coupon_id",
+        "coupon_discount",
+        "shipping_cost",
+        "grand_total",
+        "currency_id",
+        "exchange_rate",
+        "sale_status",
+        "payment_status",
+        "billing_name",
+        "billing_phone",
+        "billing_email",
+        "billing_address",
+        "billing_city",
+        "billing_state",
+        "billing_country",
+        "billing_zip",
+        "shipping_name",
+        "shipping_phone",
+        "shipping_email",
+        "shipping_address",
+        "shipping_city",
+        "shipping_state",
+        "shipping_country",
+        "shipping_zip",
+        "sale_type",
+        "garment_sale_type_id",
+        "paid_amount",
+        "document",
+        "sale_note",
+        "staff_note",
+        "created_at",
+        "woocommerce_order_id"
     ];
+
+    public function saleType()
+    {
+        return $this->belongsTo('App\Models\SaleType', 'garment_sale_type_id');
+    }
 
     public function products()
     {
@@ -43,5 +97,10 @@ class Sale extends Model
     public function currency()
     {
         return $this->belongsTo('App\Models\Currency');
+    }
+
+    public function taskAssignments()
+    {
+        return $this->hasMany('App\Models\TaskAssignment');
     }
 }

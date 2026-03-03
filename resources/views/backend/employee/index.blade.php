@@ -67,9 +67,12 @@
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
                             <ul class="dropdown-menu edit-options dropdown-menu-right dropdown-default" user="menu">
+                                <li>
+                                    <a href="{{route('employees.show', $employee->id)}}" class="btn btn-link"><i class="dripicons-user"></i> View Profile</a>
+                                </li>
                                 @if(in_array("employees-edit", $all_permission))
                                 <li>
-                                    <button type="button" data-id="{{$employee->id}}" data-name="{{$employee->name}}" data-email="{{$employee->email}}" data-phone_number="{{$employee->phone_number}}" data-department_id="{{$employee->department_id}}" data-address="{{$employee->address}}" data-city="{{$employee->city}}" data-country="{{$employee->country}}" data-staff_id="{{$employee->staff_id}}" class="edit-btn btn btn-link" data-toggle="modal" data-target="#editModal"><i class="dripicons-document-edit"></i> {{trans('file.edit')}}</button>
+                                    <button type="button" data-id="{{$employee->id}}" data-name="{{$employee->name}}" data-email="{{$employee->email}}" data-phone_number="{{$employee->phone_number}}" data-department_id="{{$employee->department_id}}" data-address="{{$employee->address}}" data-city="{{$employee->city}}" data-country="{{$employee->country}}" data-staff_id="{{$employee->staff_id}}" data-is_payroll="{{$employee->is_payroll}}" data-monthly_salary="{{$employee->monthly_salary}}" class="edit-btn btn btn-link" data-toggle="modal" data-target="#editModal"><i class="dripicons-document-edit"></i> {{trans('file.edit')}}</button>
                                 </li>
                                 @endif
                                 <li class="divider"></li>
@@ -142,6 +145,14 @@
                         <label>{{trans('file.Staff Id')}}</label>
                         <input type="text" name="staff_id" class="form-control">
                     </div>
+                    <div class="col-md-6 form-group mt-3">
+                        <input type="checkbox" name="is_payroll" value="1" class="edit-is-payroll-checkbox">
+                        <label><strong>{{trans('file.Payroll Employee')}}</strong></label>
+                    </div>
+                    <div class="col-md-6 form-group edit-salary-section" style="display: none;">
+                        <label>{{trans('file.Monthly Salary')}}</label>
+                        <input type="number" name="monthly_salary" class="form-control" step="any">
+                    </div>
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">{{trans('file.submit')}}</button>
@@ -207,7 +218,29 @@
         $("#editModal input[name='city']").val( $(this).data('city') );
         $("#editModal input[name='country']").val( $(this).data('country') );
         $("#editModal input[name='staff_id']").val( $(this).data('staff_id') );
+        
+        var isPayroll = $(this).data('is_payroll');
+        if(isPayroll == 1) {
+            $("#editModal input[name='is_payroll']").prop('checked', true);
+            $(".edit-salary-section").show();
+            $("#editModal input[name='monthly_salary']").val( $(this).data('monthly_salary') ).prop('required', true);
+        } else {
+            $("#editModal input[name='is_payroll']").prop('checked', false);
+            $(".edit-salary-section").hide();
+            $("#editModal input[name='monthly_salary']").val('').prop('required', false);
+        }
+
         $('.selectpicker').selectpicker('refresh');
+    });
+
+    $('.edit-is-payroll-checkbox').on('change', function() {
+        if($(this).is(':checked')) {
+            $('.edit-salary-section').show(300);
+            $('input[name="monthly_salary"]').prop('required', true);
+        } else {
+            $('.edit-salary-section').hide(300);
+            $('input[name="monthly_salary"]').prop('required', false);
+        }
     });
 
     $('#employee-table').DataTable( {
