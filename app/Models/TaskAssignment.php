@@ -10,7 +10,7 @@ class TaskAssignment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sale_id', 'task_id', 'employee_id', 'status', 'price'
+        'sale_id', 'product_sale_id', 'unit_item_no', 'task_id', 'price', 'employee_id', 'status'
     ];
 
     public function sale()
@@ -26,5 +26,10 @@ class TaskAssignment extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function productSale()
+    {
+        return $this->belongsTo(Product_Sale::class, 'product_sale_id');
     }
 }

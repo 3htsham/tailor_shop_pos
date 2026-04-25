@@ -736,6 +736,10 @@ Route::group(['middleware' => ['common', 'auth', 'active']], function () {
 
 
     Route::controller(TaskAssignmentController::class)->group(function () {
+        // AJAX endpoints — must be declared before the {sale_id} wildcard
+        Route::get('sales/task/{sale_id}/products', 'getSaleProducts')->name('sales.task.products');
+        Route::get('sales/task/{sale_id}/unit-assignments', 'getUnitAssignments')->name('sales.task.unit-assignments');
+
         Route::get('sales/task/{sale_id}', 'index')->name('sales.task.index');
         Route::post('sales/task/store', 'store')->name('sales.task.store');
     });
