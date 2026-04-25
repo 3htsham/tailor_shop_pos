@@ -167,6 +167,52 @@ class CustomerMeasurementController extends Controller
     }
 
     /**
+     * API: Return ALL measurements JSON for a customer (all sale types).
+     * Used by the "View Measurements" popup on the Customer list page.
+     */
+    public function getAllMeasurements($customer_id)
+    {
+        $customer = Customer::findOrFail($customer_id);
+        $measurements = CustomerMeasurement::with('saleType')
+            ->where('customer_id', $customer_id)
+            ->get();
+
+        $result = [];
+        foreach ($measurements as $measurement) {
+            $sale_type    = $measurement->saleType;
+            $custom_fields = CustomField::where('sale_type_id', $measurement->sale_type_id)->get();
+            $fields = [];
+            foreach ($custom_fields as $field) {
+                $key = str_replace(' ', '_', strtolower($field->name));
+                $fields[] = [
+                    'label' => $field->name,
+                    'key'   => $key,
+                    'value' => $measurement->measurements[$key] ?? '',
+                ];
+            }
+            $result[] = [
+                'sale_type_id'      => $measurement->sale_type_id,
+                'sale_type_name'    => $sale_type->name ?? 'N/A',
+                'measurement_unit'  => $sale_type->measurement_unit ?? '',
+                'notes'             => $measurement->notes,
+                'updated_at'        => $measurement->updated_at->format('d M Y'),
+                'fields'            => $fields,
+            ];
+        }
+
+        return response()->json([
+            'customer' => [
+                'name'         => $customer->name,
+                'phone_number' => $customer->phone_number,
+                'email'        => $customer->email,
+                'address'      => $customer->address,
+                'city'         => $customer->city,
+            ],
+            'measurements' => $result,
+        ]);
+    }
+
+    /**
      * API: Return measurements JSON for a customer + sale type combination.
      * Used by the Create Sale AJAX check.
      */

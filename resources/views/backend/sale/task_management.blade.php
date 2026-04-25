@@ -99,7 +99,8 @@
                                         </div>
                                         {{-- Locked state: shows task name as text, hidden input carries value --}}
                                         <div id="task_locked_display" style="display:none;">
-                                            <input type="hidden" name="task_id" id="task_id_hidden" value="">
+                                            {{-- disabled by default so it only submits when locked --}}
+                                            <input type="hidden" name="task_id" id="task_id_hidden" value="" disabled>
                                             <p class="form-control-plaintext font-weight-bold" id="task_locked_name"></p>
                                             <small class="text-muted">Task locked — complete current task before switching.</small>
                                         </div>
@@ -240,7 +241,8 @@ $(document).ready(function () {
             // Fresh unit — full form unlocked
             $taskWrapper.show();
             $taskLocked.hide();
-            $taskSelect.prop('disabled', false).val('').trigger('change');
+            $('#task_id_hidden').prop('disabled', true).val('');   // hidden input OFF
+            $taskSelect.prop('disabled', false).val('');           // select ON
             $priceInput.val('').prop('readonly', false);
             $statusSelect.val('Pending');
             $empSelect.val('');
@@ -255,7 +257,8 @@ $(document).ready(function () {
             // Completed — allow selecting a new task; reset form
             $taskWrapper.show();
             $taskLocked.hide();
-            $taskSelect.prop('disabled', false).val('');
+            $('#task_id_hidden').prop('disabled', true).val('');   // hidden input OFF
+            $taskSelect.prop('disabled', false).val('');           // select ON
             $priceInput.val('').prop('readonly', false);
             $statusSelect.val('Pending');
             $('#status_select option[value="Pending"]').prop('disabled', false);
@@ -266,6 +269,8 @@ $(document).ready(function () {
         // Task is In-Progress or Pending — lock the task dropdown
         $taskWrapper.hide();
         $taskLocked.show();
+        $taskSelect.prop('disabled', true);                        // select OFF
+        $('#task_id_hidden').prop('disabled', false);              // hidden input ON
 
         // Find task name
         var taskName = '';
@@ -301,34 +306,48 @@ $(document).ready(function () {
 
     /* ── Product Dropdown ──────────────────────────────────────────── */
     $('#product_sale_select').on('change', function () {
-        var $selected = $(this).find('option:selected');
-        var qty       = parseInt($selected.data('qty')) || 0;
-        var productName = $selected.data('name') || '';
+        var selectedVal = $(this).val();
+        var $selected   = $(this).find('option[value="' + selectedVal + '"]');
+        var qty         = parseInt($selected.attr('data-qty')) || 0;
 
         // Hide the task panel until a unit is picked
         $('#task-panel').hide();
 
-        if (!$(this).val() || qty < 1) {
+        if (!selectedVal || qty < 1) {
             $('#unit_item_wrapper').hide();
             return;
         }
 
         // Build unit items dropdown
         var $unitSelect = $('#unit_item_select');
-        $unitSelect.empty().append('<option value="">Select unit item...</option>');
+
+        // Destroy selectpicker first so we can cleanly repopulate
+        try { $unitSelect.selectpicker('destroy'); } catch(e) {}
+
+        $unitSelect.empty().append('<option value="">-- Select unit item --</option>');
         for (var i = 1; i <= qty; i++) {
             $unitSelect.append('<option value="' + i + '">Unit Item ' + i + '</option>');
         }
+        $unitSelect.val('');
+
+        // Re-init selectpicker so UI reflects the new options
+        try { $unitSelect.selectpicker(); } catch(e) {}
 
         $('#unit_item_wrapper').show();
-        $unitSelect.val('').trigger('change');   // reset selection
     });
 
     /* ── Unit Item Dropdown ────────────────────────────────────────── */
-    $('#unit_item_select').on('change', function () {
-        var unitNo           = $(this).val();
-        var productSaleId    = $('#product_sale_select').val();
-        var productName      = $('#product_sale_select').find('option:selected').data('name') || '';
+    /* Use changed.bs.select (fires after selectpicker updates) + fallback to change */
+    var unitSelectChanging = false;
+    $(document).on('changed.bs.select change', '#unit_item_select', function (e) {
+        // Prevent double-fire when both events fire
+        if (unitSelectChanging) return;
+        unitSelectChanging = true;
+        setTimeout(function () { unitSelectChanging = false; }, 50);
+
+        var unitNo        = $('#unit_item_select').val();
+        var productSaleId = $('#product_sale_select').val();
+        var productName   = $('#product_sale_select').find('option[value="' + productSaleId + '"]').attr('data-name') || '';
 
         if (!unitNo || !productSaleId) {
             $('#task-panel').hide();
@@ -373,14 +392,6 @@ $(document).ready(function () {
         if (!productSaleId || !unitItemNo) {
             e.preventDefault();
             alert('Please select a product and unit item first.');
-            return;
-        }
-
-        // If task is locked, ensure the hidden name="task_id" value is set
-        if ($('#task_locked_display').is(':visible')) {
-            // The visible form has name="task_id" on the hidden input inside locked display
-            // The select is hidden so we need to make sure we don't submit the disabled select
-            $('#task_id_select').prop('disabled', true);
         }
     });
 

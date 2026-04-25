@@ -206,9 +206,7 @@ class SaleController extends Controller
             $field_names[] = str_replace(" ", "_", strtolower($fieldName));
         }
         if (empty($request->input('search.value'))) {
-            $q = Sale::with('biller', 'customer', 'warehouse', 'user')
-                ->whereDate('sales.created_at', '>=', $request->input('starting_date'))
-                ->whereDate('sales.created_at', '<=', $request->input('ending_date'))
+            $q = Sale::with('biller', 'customer', 'warehouse', 'user', 'saleType')
                 ->offset($start)
                 ->limit($limit)
                 ->orderBy($order, $dir);
@@ -238,7 +236,7 @@ class SaleController extends Controller
                 ->orderBy($order, $dir);
             if (Auth::user()->role_id > 2 && config('staff_access') == 'own') {
                 $q = $q->select('sales.*')
-                    ->with('biller', 'customer', 'warehouse', 'user')
+                    ->with('biller', 'customer', 'warehouse', 'user', 'saleType')
                     ->where('sales.user_id', Auth::id())
                     ->orwhere([
                         ['sales.reference_no', 'LIKE', "%{$search}%"],
@@ -404,6 +402,25 @@ class SaleController extends Controller
                         <a href="' . route('sales.task.index', $sale->id) . '" class="btn btn-link"><i class="dripicons-list"></i> ' . trans('file.Task Management') . '</a>
                     </li>';
 
+                $nestedData['options'] .=
+                    '<li>
+                        <button type="button"
+                            class="view-sale-measurements btn btn-link"
+                            data-customer-id="' . $sale->customer_id . '"
+                            data-sale-id="' . $sale->id . '"
+                            data-sale-type-id="' . ($sale->garment_sale_type_id ?? '') . '"
+                            data-sale-ref="' . htmlspecialchars($sale->reference_no, ENT_QUOTES) . '"
+                            data-sale-date="' . date(config('date_format'), strtotime($sale->created_at->toDateString())) . '"
+                            data-sale-status="' . $sale_status . '"
+                            data-sale-type="' . htmlspecialchars($sale->saleType ? $sale->saleType->name : '', ENT_QUOTES) . '"
+                            data-sale-total="' . number_format($sale->grand_total, config('decimal')) . '"
+                            data-sale-paid="' . number_format($sale->paid_amount, config('decimal')) . '"
+                            data-sale-warehouse="' . htmlspecialchars($sale->warehouse->name, ENT_QUOTES) . '"
+                            data-toggle="modal" data-target="#saleMeasurementsModal">
+                            <i class="dripicons-scale"></i> View Measurements
+                        </button>
+                    </li>';
+
                 if (in_array("sale-payment-index", $request['all_permission']))
                     $nestedData['options'] .=
                         '<li>
@@ -493,7 +510,8 @@ class SaleController extends Controller
                     ' "' . $sale->coupon_discount . '"',
                     ' "' . $sale->document . '"',
                     ' "' . $currency_code . '"',
-                    ' "' . $sale->exchange_rate . '"]'
+                    ' "' . $sale->exchange_rate . '"',
+                    ' "' . ($sale->saleType ? $sale->saleType->name : '') . '"]'
                 );
                 $data[] = $nestedData;
             }

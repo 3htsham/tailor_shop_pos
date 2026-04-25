@@ -27,7 +27,7 @@
                 <div class="card-body">
                     @if ($measurements->isEmpty())
                         <div class="text-center py-5">
-                            <i class="dripicons-ruler" style="font-size:48px; color:#ccc;"></i>
+                            <i class="dripicons-scale" style="font-size:48px; color:#ccc;"></i>
                             <p class="mt-3 text-muted">No measurements recorded yet for this customer.</p>
                             <a href="{{ route('customer.measurements.create', $customer->id) }}" class="btn btn-info">
                                 <i class="dripicons-plus"></i> Add First Measurement

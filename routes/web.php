@@ -362,6 +362,7 @@ Route::group(['middleware' => ['common', 'auth', 'active']], function () {
     Route::put('customer-measurements/{id}', [CustomerMeasurementController::class, 'update'])->name('customer-measurements.update');
     Route::delete('customer-measurements/{id}', [CustomerMeasurementController::class, 'destroy'])->name('customer-measurements.destroy');
     Route::get('customer-measurements/get/{customer_id}/{sale_type_id}', [CustomerMeasurementController::class, 'getMeasurements'])->name('customer.measurements.get');
+    Route::get('customer/{customer_id}/measurements/all', [CustomerMeasurementController::class, 'getAllMeasurements'])->name('customer.measurements.all');
 
     Route::controller(PackingSlipController::class)->group(function () {
         Route::prefix('packing-slips')->group(function () {

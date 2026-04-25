@@ -157,7 +157,10 @@ class CustomerController extends Controller
 
                 if(in_array("customers-edit", $request['all_permission'])){
                     $nestedData['options'] .= '<li>
-                        <a href="'.route('customer.measurements.index', $customer->id).'" class="btn btn-link"><i class="dripicons-ruler"></i> Measurements</a>
+                        <a href="'.route('customer.measurements.index', $customer->id).'" class="btn btn-link"><i class="dripicons-scale"></i> Measurements</a>
+                        </li>';
+                    $nestedData['options'] .= '<li>
+                        <button type="button" data-id="'.$customer->id.'" data-name="'.htmlspecialchars($customer->name, ENT_QUOTES).'" class="view-measurements btn btn-link" data-toggle="modal" data-target="#viewMeasurementsModal"><i class="dripicons-preview"></i> View Measurements</button>
                         </li>';
                 }
 
