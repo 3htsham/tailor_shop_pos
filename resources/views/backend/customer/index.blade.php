@@ -20,7 +20,7 @@
         @endif
     </div>
     <div class="table-responsive">
-        <table id="customer-table" class="table">
+        <table id="customer-table" class="table" style="width: 100%">
             <thead>
                 <tr>
                     <th class="not-exported"></th>
