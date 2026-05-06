@@ -31,7 +31,7 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>{{ $field->name }} <small class="text-muted">({{ $sale_type->measurement_unit }})</small> *</label>
-                                            <input type="number" step="any" name="{{ $key }}"
+                                            <input type="text" step="any" name="{{ $key }}"
                                                 class="form-control"
                                                 value="{{ $current_value }}"
                                                 placeholder="e.g. 36" required>
