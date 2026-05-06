@@ -1437,13 +1437,16 @@
         var saleType      = $(this).data('sale-type');
         var saleTotal     = $(this).data('sale-total');
         var salePaid      = $(this).data('sale-paid');
+        var staffNote       = $(this).data('sale-staff-note');
+        var saleNote        = $(this).data('sale-note');
         var saleWarehouse = $(this).data('sale-warehouse');
 
         $('#sm-sale-subtitle').text('Ref: ' + saleRef);
         $('#sm-modal-body').html('<div class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading...</p></div>');
 
         var saleInfo = { ref: saleRef, date: saleDate, status: saleStatus, type: saleType,
-                         total: saleTotal, paid: salePaid, warehouse: saleWarehouse, saleTypeId: saleTypeId };
+                         total: saleTotal, paid: salePaid, warehouse: saleWarehouse, saleTypeId: saleTypeId, 
+                         saleNote: saleNote,  staffNote: staffNote };
 
         var reqMeasurements = $.get('/customer/' + customerId + '/measurements/all');
         var reqProducts     = $.get('sales/product_sale/' + saleId);
@@ -1528,6 +1531,10 @@
             html += '<tr><td colspan=6 class="text-center text-muted">No products found.</td></tr>';
         }
         html += '</tbody></table></div></div>';
+        
+                if (saleInfo.saleNote) html += '<div class="mt-2" style="background:#fff8e1;border-left:4px solid #ffc107;border-radius:4px;padding:8px 12px;"><small style="color:#888;"><i class="fa fa-sticky-note-o mr-1"></i>Sale Notes:</small><div style="color:#555;">' + smEscapeHtml(saleInfo.saleNote) + '</div></div>';
+        
+                if (saleInfo.staffNote) html += '<div class="mt-2" style="background:#fff8e1;border-left:4px solid #ffc107;border-radius:4px;padding:8px 12px;"><small style="color:#888;"><i class="fa fa-sticky-note-o mr-1"></i>Staff Notes:</small><div style="color:#555;">' + smEscapeHtml(saleInfo.staffNote) + '</div></div></br>';
 
         // -- Measurements accordion (filtered) --
         html += '<div class="mb-2" style="font-size:13px;font-weight:700;color:#0f3460;text-transform:uppercase;letter-spacing:.6px;"><i class="dripicons-scale mr-1"></i>Measurements';
@@ -1612,6 +1619,8 @@
             });
             html += '</tbody></table>';
         }
+                if (saleInfo.saleNote) html += '<div class="notes"><strong>Sale Notes:</strong> '+smEscapeHtml(saleInfo.saleNote)+'</div>';
+                if (saleInfo.staffNote) html += '<div class="notes"><strong>Staff Notes:</strong> '+smEscapeHtml(saleInfo.staffNote)+'</div></br>';
 
         // Measurements (already filtered)
         if (measurements.length === 0) {
