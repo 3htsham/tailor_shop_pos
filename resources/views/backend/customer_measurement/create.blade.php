@@ -106,7 +106,7 @@
                     var html = '<div class="col-md-3">' +
                         '<div class="form-group">' +
                         '<label>' + field.name + ' <small class="text-muted">(' + data.measurement_unit + ')</small> *</label>' +
-                        '<input type="number" step="any" name="' + fieldKey + '" ' +
+                        '<input type="text" step="any" name="' + fieldKey + '" ' +
                         'class="form-control" placeholder="e.g. 36" required>' +
                         '</div></div>';
                     container.append(html);
