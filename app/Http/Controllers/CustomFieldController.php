@@ -136,12 +136,12 @@ class CustomFieldController extends Controller
         else
             $data_type = 'varchar(255)';
 
-        if($data['name'] == $lims_custom_field_data->name) {}
+        if($data['name'] == $lims_custom_field_data->name) {
             $action = " MODIFY COLUMN ";
             $column_definition = "`" . $column_name . "` " . $data_type; 
         } else {
             $action = " CHANGE COLUMN ";
-            $old_column_name = str.replace(" ", "_", strtolower($lims_custom_field_data->name)); 
+            $old_column_name = str_replace(" ", "_", strtolower($lims_custom_field_data->name)); 
             $column_definition = "`" . $old_column_name . "` `" . $column_name . "` " . $data_type; 
         }
         // if($data['name'] == $lims_custom_field_data->name)
