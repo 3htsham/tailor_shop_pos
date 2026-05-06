@@ -71,7 +71,6 @@ use App\Http\Controllers\ChallanController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\LabelsController;
 use App\Http\Controllers\SaleTypeController;
-use App\Http\Controllers\CustomerMeasurementController;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -353,16 +352,6 @@ Route::group(['middleware' => ['common', 'auth', 'active']], function () {
 
     Route::resource('sale-types', SaleTypeController::class);
     Route::get('sale-types/{id}/custom-fields', [SaleTypeController::class, 'getCustomFields'])->name('sale-types.custom-fields');
-
-    // Customer Measurements
-    Route::get('customer/{customer_id}/measurements', [CustomerMeasurementController::class, 'index'])->name('customer.measurements.index');
-    Route::get('customer/{customer_id}/measurements/create', [CustomerMeasurementController::class, 'create'])->name('customer.measurements.create');
-    Route::post('customer-measurements', [CustomerMeasurementController::class, 'store'])->name('customer-measurements.store');
-    Route::get('customer-measurements/{id}/edit', [CustomerMeasurementController::class, 'edit'])->name('customer-measurements.edit');
-    Route::put('customer-measurements/{id}', [CustomerMeasurementController::class, 'update'])->name('customer-measurements.update');
-    Route::delete('customer-measurements/{id}', [CustomerMeasurementController::class, 'destroy'])->name('customer-measurements.destroy');
-    Route::get('customer-measurements/get/{customer_id}/{sale_type_id}', [CustomerMeasurementController::class, 'getMeasurements'])->name('customer.measurements.get');
-    Route::get('customer/{customer_id}/measurements/all', [CustomerMeasurementController::class, 'getAllMeasurements'])->name('customer.measurements.all');
 
     Route::controller(PackingSlipController::class)->group(function () {
         Route::prefix('packing-slips')->group(function () {
@@ -737,10 +726,6 @@ Route::group(['middleware' => ['common', 'auth', 'active']], function () {
 
 
     Route::controller(TaskAssignmentController::class)->group(function () {
-        // AJAX endpoints — must be declared before the {sale_id} wildcard
-        Route::get('sales/task/{sale_id}/products', 'getSaleProducts')->name('sales.task.products');
-        Route::get('sales/task/{sale_id}/unit-assignments', 'getUnitAssignments')->name('sales.task.unit-assignments');
-
         Route::get('sales/task/{sale_id}', 'index')->name('sales.task.index');
         Route::post('sales/task/store', 'store')->name('sales.task.store');
     });

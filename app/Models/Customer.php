@@ -26,9 +26,4 @@ class Customer extends Model
     {
         return $this->belongsToMany('App\Models\DiscountPlan', 'discount_plan_customers');
     }
-
-    public function measurements()
-    {
-        return $this->hasMany(CustomerMeasurement::class);
-    }
 }

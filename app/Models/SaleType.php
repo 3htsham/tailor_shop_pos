@@ -12,9 +12,4 @@ class SaleType extends Model
     {
         return $this->hasMany(CustomField::class, 'sale_type_id');
     }
-
-    public function customerMeasurements()
-    {
-        return $this->hasMany(CustomerMeasurement::class);
-    }
 }

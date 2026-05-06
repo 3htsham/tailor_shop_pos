@@ -155,24 +155,15 @@ class CustomerController extends Controller
                         </li>';
                 }
 
-                if(in_array("customers-edit", $request['all_permission'])){
-                    $nestedData['options'] .= '<li>
-                        <a href="'.route('customer.measurements.index', $customer->id).'" class="btn btn-link"><i class="dripicons-scale"></i> Measurements</a>
-                        </li>';
-                    $nestedData['options'] .= '<li>
-                        <button type="button" data-id="'.$customer->id.'" data-name="'.htmlspecialchars($customer->name, ENT_QUOTES).'" class="view-measurements btn btn-link" data-toggle="modal" data-target="#viewMeasurementsModal"><i class="dripicons-preview"></i> View Measurements</button>
-                        </li>';
-                }
-
                 if(in_array("due-report", $request['all_permission'])) {
                     $nestedData['options'] .= '<li>
-                        '.\Form::open(['route' => 'report.customerDueByDate', 'method' => 'post', 'id' => 'due-report-form']).
-                            '<input type="hidden" name="start_date" value="'.date('Y-m-d', strtotime('-30 year')).'" />' .
-                            '<input type="hidden" name="end_date" value="'.date('Y-m-d').'" />' .
-                            '<input type="hidden" name="customer_id" value="'.$customer->id.'" />' .
-                            '<button type="submit" class="btn btn-link"><i class="dripicons-pulse"></i>'.trans('file.Due Report').'</button>' .
-                        \Form::close().
-                    '</li>';
+                        '.\Form::open(['route' => 'report.customerDueByDate', 'method' => 'post', 'id' => 'due-report-form']).'
+                            <input type="hidden" name="start_date" value="'.date('Y-m-d', strtotime('-30 year')).'" />
+                            <input type="hidden" name="end_date" value="'.date('Y-m-d').'" />
+                            <input type="hidden" name="customer_id" value="'.$customer->id.'" />
+                            <button type="submit" class="btn btn-link"><i class="dripicons-pulse"></i>'.trans('file.Due Report').'</button>
+                        '.\Form::close().'
+                    </li>';
                 }
 
                 $nestedData['options'] .=
