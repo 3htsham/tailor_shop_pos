@@ -569,6 +569,43 @@
         </div>
     </div>
 </div>
+
+{{-- ============================
+     Sale View Measurements Modal
+     ============================ --}}
+<div id="saleMeasurementsModal" tabindex="-1" role="dialog" aria-labelledby="saleMeasurementsLabel" aria-hidden="true" class="modal fade text-left">
+    <div role="document" class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: #fff;">
+                <div>
+                    <h5 id="saleMeasurementsLabel" class="modal-title mb-0" style="font-weight:700; letter-spacing:.5px;">
+                        <i class="dripicons-scale mr-2"></i> Sale Measurements
+                    </h5>
+                    <small id="sm-sale-subtitle" style="opacity:.8;"></small>
+                </div>
+                <div class="ml-auto d-flex align-items-center">
+                    <button type="button" id="sm-print-btn" class="btn btn-sm mr-2"
+                        style="background:#e94560; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                        <i class="fa fa-print mr-1"></i> Print
+                    </button>
+                    <button type="button" data-dismiss="modal" aria-label="Close" class="close" style="color:#fff; opacity:.9; margin-left:8px;">
+                        <span aria-hidden="true"><i class="dripicons-cross"></i></span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body" id="sm-modal-body" style="background:#f8f9fc; padding:24px;">
+                <div class="text-center text-muted py-4">
+                    <i class="fa fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Printable version (hidden) --}}
+<div id="sm-printable" style="display:none;"></div>
+
 @endsection
 
 @push('scripts')
@@ -1334,7 +1371,11 @@
 
             $("table.product-sale-list").append(newBody);
         });
-        var htmlfooter = '<p><strong>{{trans("file.Sale Note")}}:</strong> '+sale[23]+'</p><p><strong>{{trans("file.Staff Note")}}:</strong> '+sale[24]+'</p><strong>{{trans("file.Created By")}}:</strong><br>'+sale[25]+'<br>'+sale[26];
+        var htmlfooter = '';
+        if (sale[33]) {
+            htmlfooter += '<p><strong>Sale Type:</strong> ' + sale[33] + '</p>';
+        }
+        htmlfooter += '<p><strong>{{trans("file.Sale Note")}}:</strong> '+sale[23]+'</p><p><strong>{{trans("file.Staff Note")}}:</strong> '+sale[24]+'</p><strong>{{trans("file.Created By")}}:</strong><br>'+sale[25]+'<br>'+sale[26];
         $('#sale-content').html(htmltext);
         $('#sale-footer').html(htmlfooter);
         $('#sale-details').modal('show');
@@ -1382,6 +1423,235 @@
             $("#send-sms input[name='payment_status']").val($(this).data('payment_status'));
         });
     });
+
+    /* ============================================================
+       SALE VIEW MEASUREMENTS POPUP
+       ============================================================ */
+    $(document).on('click', '.view-sale-measurements', function () {
+        var customerId    = $(this).data('customer-id');
+        var saleId        = $(this).data('sale-id');
+        var saleTypeId    = $(this).data('sale-type-id') || '';
+        var saleRef       = $(this).data('sale-ref');
+        var saleDate      = $(this).data('sale-date');
+        var saleStatus    = $(this).data('sale-status');
+        var saleType      = $(this).data('sale-type');
+        var saleTotal     = $(this).data('sale-total');
+        var salePaid      = $(this).data('sale-paid');
+        var saleWarehouse = $(this).data('sale-warehouse');
+
+        $('#sm-sale-subtitle').text('Ref: ' + saleRef);
+        $('#sm-modal-body').html('<div class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading...</p></div>');
+
+        var saleInfo = { ref: saleRef, date: saleDate, status: saleStatus, type: saleType,
+                         total: saleTotal, paid: salePaid, warehouse: saleWarehouse, saleTypeId: saleTypeId };
+
+        var reqMeasurements = $.get('/customer/' + customerId + '/measurements/all');
+        var reqProducts     = $.get('sales/product_sale/' + saleId);
+
+        $.when(reqMeasurements, reqProducts).done(function (mRes, pRes) {
+            renderSaleMeasurementsModal(mRes[0], pRes[0], saleInfo);
+        }).fail(function () {
+            $('#sm-modal-body').html('<div class="alert alert-danger">Failed to load data. Please try again.</div>');
+        });
+    });
+
+    function renderSaleMeasurementsModal(data, productData, saleInfo) {
+        var c = data.customer;
+        // Filter measurements: only the one matching this sale's garment_sale_type_id
+        var allMeasurements = data.measurements;
+        var measurements = saleInfo.saleTypeId
+            ? allMeasurements.filter(function(m){ return String(m.sale_type_id) === String(saleInfo.saleTypeId); })
+            : allMeasurements;
+
+        var html = '';
+
+        // -- Sale info card --
+        html += '<div class="card mb-3 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">';
+        html += '<div class="card-body" style="background:linear-gradient(135deg,#0f3460,#e94560);color:#fff;padding:20px 24px;">';
+        html += '<div class="row">';
+        html += '<div class="col-md-6">';
+        html += '<div style="font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:.6px;">Sale Reference</div>';
+        html += '<div style="font-size:20px;font-weight:700;">' + smEscapeHtml(saleInfo.ref) + '</div>';
+        html += '<div class="mt-2" style="font-size:12px;opacity:.85;"><i class="fa fa-calendar mr-1"></i>' + smEscapeHtml(saleInfo.date) + '</div>';
+        html += '<div style="font-size:12px;opacity:.85;"><i class="fa fa-flag mr-1"></i>' + smEscapeHtml(saleInfo.status) + '</div>';
+        if (saleInfo.type) html += '<div style="font-size:12px;opacity:.85;"><i class="dripicons-scale mr-1"></i>Type: ' + smEscapeHtml(saleInfo.type) + '</div>';
+        if (saleInfo.warehouse) html += '<div style="font-size:12px;opacity:.85;"><i class="fa fa-home mr-1"></i>' + smEscapeHtml(saleInfo.warehouse) + '</div>';
+        html += '</div></div></div></div>';
+
+        // -- Customer info card --
+        html += '<div class="card mb-3 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">';
+        html += '<div class="card-body" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#fff;padding:20px 24px;">';
+        html += '<div class="row align-items-center">';
+        html += '<div class="col-auto"><div style="width:52px;height:52px;background:rgba(233,69,96,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;">' + c.name.charAt(0).toUpperCase() + '</div></div>';
+        html += '<div class="col">';
+        html += '<h5 class="mb-0 font-weight-bold" style="color:#fff;">' + smEscapeHtml(c.name) + '</h5>';
+        if (c.phone_number) html += '<small style="opacity:.85;"><i class="fa fa-phone mr-1"></i>' + smEscapeHtml(c.phone_number) + '</small>';
+        if (c.email)        html += '&nbsp;&nbsp;<small style="opacity:.85;"><i class="fa fa-envelope mr-1"></i>' + smEscapeHtml(c.email) + '</small>';
+        if (c.address||c.city) html += '<br><small style="opacity:.8;"><i class="fa fa-map-marker mr-1"></i>' + smEscapeHtml((c.address||'')+(c.city?', '+c.city:'')) + '</small>';
+        html += '</div></div></div></div>';
+
+        // -- Products table --
+        html += '<div class="card mb-3 border-0 shadow-sm" style="border-radius:10px;overflow:hidden;">';
+        html += '<div class="card-header py-2 px-3" style="background:#16213e;color:#fff;font-weight:700;font-size:14px;"><i class="dripicons-box mr-2"></i>Products</div>';
+        html += '<div class="table-responsive">';
+        html += '<table class="table table-sm table-bordered mb-0" style="font-size:13px;">';
+        html += '<thead style="background:#f0f4ff;"><tr>';
+        html += '<th>#</th><th>{{trans("file.product")}}</th><th>{{trans("file.Batch No")}}</th>';
+        html += '<th>{{trans("file.qty")}}</th><th>{{trans("file.Return")}}</th>';
+        html += '<th>{{trans("file.Delivered")}}</th>';
+        html += '</tr></thead><tbody>';
+
+        if (productData && productData[0]) {
+            var name_code  = productData[0];
+            var qty        = productData[1];
+            var unit_code  = productData[2];
+            var batch_no   = productData[7];
+            var return_qty = productData[8];
+            var delivered  = productData[9];
+            var total_qty  = 0;
+            $.each(name_code, function(i) {
+                total_qty += parseFloat(qty[i]);
+                html += '<tr>';
+                html += '<td><strong>' + (parseInt(i)+1) + '</strong></td>';
+                html += '<td>' + name_code[i] + '</td>';
+                html += '<td>' + batch_no[i] + '</td>';
+                html += '<td>' + qty[i] + ' ' + unit_code[i] + '</td>';
+                html += '<td>' + return_qty[i] + '</td>';
+                html += '<td>' + delivered[i] + '</td>';
+                html += '</tr>';
+            });
+            html += '<tr style="background:#f8f9fc;font-weight:700;">';
+            html += '<td colspan=3><strong>{{trans("file.Total")}}</strong></td>';
+            html += '<td>' + total_qty + '</td><td colspan=2></td>';
+            html += '</tr>';
+        } else {
+            html += '<tr><td colspan=6 class="text-center text-muted">No products found.</td></tr>';
+        }
+        html += '</tbody></table></div></div>';
+
+        // -- Measurements accordion (filtered) --
+        html += '<div class="mb-2" style="font-size:13px;font-weight:700;color:#0f3460;text-transform:uppercase;letter-spacing:.6px;"><i class="dripicons-scale mr-1"></i>Measurements';
+        if (!saleInfo.saleTypeId) html += ' <small style="font-weight:normal;color:#aaa;">(all sale types)</small>';
+        html += '</div>';
+
+        if (measurements.length === 0) {
+            html += '<div class="text-center py-3" style="color:#aaa;"><i class="dripicons-scale" style="font-size:36px;"></i><p class="mt-2">No measurements recorded for this sale type.</p></div>';
+        } else {
+            html += '<style>.sm-acc-body{overflow:hidden;transition:max-height .35s ease,opacity .35s ease;max-height:0;opacity:0;}.sm-acc-body.sm-open{max-height:2000px;opacity:1;}.sm-acc-header{cursor:pointer;user-select:none;}.sm-chevron{transition:transform .3s ease;display:inline-block;}.sm-open-header .sm-chevron{transform:rotate(180deg);}</style>';
+            measurements.forEach(function (m, idx) {
+                var accentColors = ['#0f3460','#1a1a2e','#16213e','#533483','#e94560'];
+                var accent = accentColors[idx % accentColors.length];
+                var collapseId = 'sm-collapse-' + idx;
+                var isOpen = (idx === 0);
+                html += '<div class="card mb-3 border-0 shadow-sm" style="border-radius:10px;overflow:hidden;">';
+                html += '<div class="sm-acc-header d-flex align-items-center py-2 px-3' + (isOpen?' sm-open-header':'') + '" data-target="' + collapseId + '" style="background:' + accent + ';color:#fff;">';
+                html += '<span class="font-weight-bold" style="font-size:15px;"><i class="dripicons-scale mr-2"></i>' + smEscapeHtml(m.sale_type_name) + '</span>';
+                if (m.measurement_unit) html += '<span class="ml-2 badge" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;">Unit: ' + smEscapeHtml(m.measurement_unit) + '</span>';
+                html += '<small class="ml-auto mr-2" style="opacity:.75;">Updated: ' + smEscapeHtml(m.updated_at) + '</small>';
+                html += '<span class="sm-chevron" style="font-size:16px;line-height:1;">&#8963;</span>';
+                html += '</div>';
+                html += '<div id="' + collapseId + '" class="sm-acc-body' + (isOpen?' sm-open':'') + '"><div style="padding:16px 20px;">';
+                if (m.fields.length > 0) {
+                    html += '<div class="row">';
+                    m.fields.forEach(function(f){
+                        html += '<div class="col-sm-6 col-md-4 mb-2"><div style="background:#f0f4ff;border-radius:8px;padding:10px 14px;">';
+                        html += '<small style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:.6px;">' + smEscapeHtml(f.label) + '</small>';
+                        html += '<div style="font-weight:700;font-size:16px;color:#1a1a2e;">' + (f.value!==''?smEscapeHtml(String(f.value)):'<span style="color:#ccc;">—</span>') + '</div>';
+                        html += '</div></div>';
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<p class="text-muted">No measurement fields defined.</p>';
+                }
+                if (m.notes) html += '<div class="mt-2" style="background:#fff8e1;border-left:4px solid #ffc107;border-radius:4px;padding:8px 12px;"><small style="color:#888;"><i class="fa fa-sticky-note-o mr-1"></i>Notes:</small><div style="color:#555;">' + smEscapeHtml(m.notes) + '</div></div>';
+                html += '</div></div></div>';
+            });
+        }
+
+        $('#sm-modal-body').html(html);
+
+        $('#sm-modal-body').off('click','.sm-acc-header').on('click','.sm-acc-header',function(){
+            var targetId=$(this).data('target');
+            var $body=$('#'+targetId);
+            var isOpen=$body.hasClass('sm-open');
+            $body.toggleClass('sm-open',!isOpen);
+            $(this).toggleClass('sm-open-header',!isOpen);
+        });
+
+        $('#sm-printable').html(buildSalePrintable(data, productData, saleInfo, measurements));
+    }
+
+    function buildSalePrintable(data, productData, saleInfo, measurements) {
+        var c = data.customer;
+        var html = '';
+        html += '<style>body{font-family:Arial,sans-serif;color:#222;padding:24px;}h1{font-size:20px;border-bottom:2px solid #0f3460;padding-bottom:8px;margin-bottom:12px;}.si{display:flex;flex-wrap:wrap;gap:14px;background:#f5f7ff;border-radius:6px;padding:14px 18px;margin-bottom:14px;}.si .f{min-width:120px;}.si .f label{display:block;font-size:11px;color:#666;text-transform:uppercase;}.si .f span{font-size:14px;font-weight:700;}.ci{background:#eef2ff;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:14px;}.pt{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12px;}.pt th{background:#0f3460;color:#fff;padding:6px 8px;text-align:left;}.pt td{padding:5px 8px;border-bottom:1px solid #e0e0e0;}.pt tr:nth-child(even){background:#f5f7ff;}.sec{margin-bottom:20px;}.sec h2{background:#0f3460;color:#fff;padding:7px 12px;border-radius:6px 6px 0 0;font-size:14px;margin:0;}.flds{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;}.fi{background:#f0f4ff;border-radius:5px;padding:7px 10px;min-width:120px;}.fi label{display:block;font-size:10px;color:#666;text-transform:uppercase;}.fi span{font-size:14px;font-weight:700;}.notes{background:#fff8e1;border-left:4px solid #ffc107;padding:7px 10px;margin-top:7px;font-size:12px;}</style>';
+        html += '<h1>Sale Measurements</h1>';
+
+        // Sale info
+        html += '<div class="si">';
+        html += '<div class="f"><label>Reference</label><span>' + smEscapeHtml(saleInfo.ref) + '</span></div>';
+        html += '<div class="f"><label>Date</label><span>' + smEscapeHtml(saleInfo.date) + '</span></div>';
+        html += '<div class="f"><label>Status</label><span>' + smEscapeHtml(saleInfo.status) + '</span></div>';
+        if (saleInfo.type)      html += '<div class="f"><label>Sale Type</label><span>' + smEscapeHtml(saleInfo.type) + '</span></div>';
+        if (saleInfo.warehouse) html += '<div class="f"><label>Warehouse</label><span>' + smEscapeHtml(saleInfo.warehouse) + '</span></div>';
+        html += '</div>';
+
+        // Customer info
+        html += '<div class="ci"><strong>' + smEscapeHtml(c.name) + '</strong>';
+        if (c.phone_number) html += ' | ' + smEscapeHtml(c.phone_number);
+        if (c.email)        html += ' | ' + smEscapeHtml(c.email);
+        if (c.address||c.city) html += ' | ' + smEscapeHtml((c.address||'')+(c.city?', '+c.city:''));
+        html += '</div>';
+
+        // Products table
+        if (productData && productData[0]) {
+            var nc=productData[0],qty=productData[1],uc=productData[2],bn=productData[7],rq=productData[8],del=productData[9];
+            html += '<table class="pt"><thead><tr><th>#</th><th>Product</th><th>Batch</th><th>Qty</th><th>Return</th><th>Delivered</th></tr></thead><tbody>';
+            $.each(nc, function(i){
+                html += '<tr><td>'+(parseInt(i)+1)+'</td><td>'+nc[i]+'</td><td>'+bn[i]+'</td><td>'+qty[i]+' '+uc[i]+'</td><td>'+rq[i]+'</td><td>'+del[i]+'</td></tr>';
+            });
+            html += '</tbody></table>';
+        }
+
+        // Measurements (already filtered)
+        if (measurements.length === 0) {
+            html += '<p style="color:#999;">No measurements recorded for this sale type.</p>';
+        } else {
+            measurements.forEach(function(m){
+                html += '<div class="sec"><h2>' + smEscapeHtml(m.sale_type_name);
+                if (m.measurement_unit) html += ' <small style="font-size:11px;font-weight:normal;">(Unit: ' + smEscapeHtml(m.measurement_unit) + ')</small>';
+                html += ' <small style="font-size:11px;font-weight:normal;float:right;">Updated: ' + smEscapeHtml(m.updated_at) + '</small></h2>';
+                html += '<div class="flds">';
+                m.fields.forEach(function(f){ html += '<div class="fi"><label>'+smEscapeHtml(f.label)+'</label><span>'+(f.value!==''?smEscapeHtml(String(f.value)):'—')+'</span></div>'; });
+                html += '</div>';
+                if (m.notes) html += '<div class="notes"><strong>Notes:</strong> '+smEscapeHtml(m.notes)+'</div>';
+                html += '</div>';
+            });
+        }
+        return html;
+    }
+
+    $('#sm-print-btn').on('click', function () {
+        var printContents = $('#sm-printable').html();
+        var win = window.open('', '_blank', 'width=900,height=700');
+        win.document.write('<html><head><title>Sale Measurements</title></head><body>');
+        win.document.write(printContents);
+        win.document.write('</body></html>');
+        win.document.close();
+        win.focus();
+        win.print();
+    });
+
+    function smEscapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
 </script>
 <script type="text/javascript" src="https://js.stripe.com/v3/"></script>
 @endpush
