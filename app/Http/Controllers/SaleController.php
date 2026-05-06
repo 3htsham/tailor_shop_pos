@@ -412,6 +412,8 @@ class SaleController extends Controller
                             data-sale-ref="' . htmlspecialchars($sale->reference_no, ENT_QUOTES) . '"
                             data-sale-date="' . date(config('date_format'), strtotime($sale->created_at->toDateString())) . '"
                             data-sale-status="' . $sale_status . '"
+                            data-sale-note="' . $sale->sale_note . '"
+                            data-sale-staff-note="' . $sale->staff_note . '"
                             data-sale-type="' . htmlspecialchars($sale->saleType ? $sale->saleType->name : '', ENT_QUOTES) . '"
                             data-sale-total="' . number_format($sale->grand_total, config('decimal')) . '"
                             data-sale-paid="' . number_format($sale->paid_amount, config('decimal')) . '"
