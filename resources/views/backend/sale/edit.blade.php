@@ -423,11 +423,13 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div id="sale-type-custom-fields" class="col-md-12">
-                                            <div class="row" id="sale-type-fields-container">
-                                                {{-- Dynamic fields loaded via AJAX --}}
-                                            </div>
+
+                                        {{-- Measurement status panel (shown when both customer + sale type are selected) --}}
+                                        <div id="measurement-status-panel" class="col-md-12" style="display:none;">
+                                            {{-- Populated by AJAX --}}
                                         </div>
+
+
                                         @foreach ($custom_fields as $field)
                                             <?php $field_name = str_replace(' ', '_', strtolower($field->name)); ?>
                                             @if (!$field->is_admin || \Auth::user()->role_id == 1)
@@ -1550,47 +1552,78 @@
         });
     </script>
     <script type="text/javascript" src="https://js.stripe.com/v3/"></script>
+
     <script>
-        // Sale Type dynamic custom fields
-        function loadSaleTypeFields(saleTypeId) {
-            var container = $('#sale-type-fields-container');
-            container.html('');
-            if (saleTypeId) {
-                $.get('/sale-types/' + saleTypeId + '/custom-fields', function(data) {
-                    var fields = data.custom_fields;
-                    var unit = data.measurement_unit;
-                    $.each(fields, function(index, field) {
-                        var fieldName = field.name.replace(/ /g, '_').toLowerCase();
-                        var existingValue = '';
-                        @if (isset($lims_sale_data))
-                            var saleData = @json($lims_sale_data);
-                            if (saleData[fieldName] !== undefined && saleData[fieldName] !== null) {
-                                existingValue = saleData[fieldName];
-                            }
-                        @endif
-                        var html = '<div class="col-md-4">' +
-                            '<div class="form-group">' +
-                            '<label>' + field.name + ' (' + unit +
-                            ') <span class="text-danger">*</span></label>' +
-                            '<input type="text" name="' + fieldName + '" class="form-control" value="' +
-                            existingValue + '" required />' +
-                            '</div>' +
-                            '</div>';
-                        container.append(html);
-                    });
-                });
+        // ─── Customer Measurements check ───────────────────────────────────────
+        function checkMeasurements() {
+            var customerId = $('select[name="customer_id"]').val();
+            var saleTypeId = $('#garment_sale_type_id').val();
+            var panel      = $('#measurement-status-panel');
+            var submitBtn  = $('#submit-button');
+
+            panel.hide().html('');
+
+            if (!saleTypeId) {
+                submitBtn.prop('disabled', false).removeClass('btn-danger').addClass('btn-primary');
+                return;
             }
+            if (!customerId) {
+                submitBtn.prop('disabled', false).removeClass('btn-danger').addClass('btn-primary');
+                return;
+            }
+
+            $.get('{{ url('customer-measurements/get') }}/' + customerId + '/' + saleTypeId, function(data) {
+                if (data.exists) {
+                    var unit = data.measurement_unit;
+                    var html = '<div class="alert alert-success mb-3">' +
+                        '<div class="d-flex align-items-center justify-content-between">' +
+                        '<div><strong><i class="dripicons-checkmark"></i> Measurements Found</strong>' +
+                        ' &nbsp;<span class="badge badge-info">' + unit + '</span></div>' +
+                        '<a href="{{ url('customer') }}/' + customerId + '/measurements" target="_blank" ' +
+                        'class="btn btn-sm btn-outline-info">View / Edit</a></div>' +
+                        '<div class="row mt-2">';
+                    $.each(data.measurements, function(i, m) {
+                        html += '<div class="col-auto">' +
+                            '<span class="badge badge-light border p-2" style="font-size:13px;">' +
+                            m.label + ': <strong>' + m.value + ' ' + unit + '</strong>' +
+                            '</span></div>';
+                    });
+                    if (data.notes) {
+                        html += '<div class="col-12 mt-1"><small class="text-muted"><i class="dripicons-document"></i> ' + data.notes + '</small></div>';
+                    }
+                    html += '</div></div>';
+                    panel.html(html).show();
+                    submitBtn.prop('disabled', false).removeClass('btn-danger').addClass('btn-primary');
+                } else {
+                    var createUrl = '{{ url('customer') }}/' + customerId + '/measurements/create';
+                    var html = '<div class="alert alert-warning d-flex align-items-center justify-content-between mb-3">' +
+                        '<div><i class="dripicons-warning"></i> &nbsp;' +
+                        '<strong>No measurements found</strong> for this customer and sale type. ' +
+                        'Please create measurements before updating this sale.</div>' +
+                        '<a href="' + createUrl + '" target="_blank" class="btn btn-warning btn-sm ml-3" style="white-space:nowrap;">' +
+                        '<i class="dripicons-plus"></i> Create Measurements</a>' +
+                        '</div>';
+                    panel.html(html).show();
+                    submitBtn.prop('disabled', true).removeClass('btn-primary').addClass('btn-danger');
+                }
+            });
         }
 
+        // ─── Sale Type change → check measurements ─────────────────────────────
         $('#garment_sale_type_id').on('change', function() {
-            loadSaleTypeFields($(this).val());
+            checkMeasurements();
         });
 
-        // Auto-load fields if sale type is pre-selected
+        // ─── Customer change → re-check measurements ─────────────────────────────
+        $('select[name="customer_id"]').on('change', function() {
+            checkMeasurements();
+        });
+
+        // Auto-run measurement check if sale type is pre-selected on load
         $(document).ready(function() {
             var selectedType = $('#garment_sale_type_id').val();
             if (selectedType) {
-                loadSaleTypeFields(selectedType);
+                checkMeasurements();
             }
         });
     </script>
